@@ -63,6 +63,8 @@ struct LogCapture {
    [[gnu::format(printf, 2, 3)]] void capturef(G3LOG_FORMAT_STRING const char *printf_like_message, ...); // 2,3 ref:  http://www.codemaestro.com/reviews/18
 #endif
 
+  void vcapturef(const char *printf_like_message, va_list arglist);
+
    /// prettifying API for this completely open struct
    std::ostringstream &stream() {
       return _stream;
