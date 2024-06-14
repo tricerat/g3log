@@ -111,3 +111,40 @@ void LogCapture::capturef(const char* printf_like_message, ...) {
       stream() << finished_message;
    }
 }
+
+void LogCapture::vcapturef(const char *printf_like_message, va_list arglist) {
+   static const std::string kTruncatedWarningText = "[...truncated...]";
+#ifdef G3_DYNAMIC_MAX_MESSAGE_SIZE
+   std::vector<char> finished_message_backing(MaxMessageSize);
+   char *finished_message = finished_message_backing.data();
+   auto finished_message_len = MaxMessageSize;
+#else
+   static const int kMaxMessageSize = 2048;
+   char finished_message[kMaxMessageSize];
+#if ((defined(WIN32) || defined(_WIN32) || defined(__WIN32__)) && !defined(__GNUC__))
+   auto finished_message_len = _countof(finished_message);
+#else
+   int finished_message_len = sizeof(finished_message);
+#endif
+#endif /* G3_DYNAMIC_MAX_MESSAGE_SIZE*/
+
+  //  va_list arglist;
+  //  va_start(arglist, printf_like_message);
+
+
+#if ((defined(WIN32) || defined(_WIN32) || defined(__WIN32__)) && !defined(__GNUC__))
+   const int nbrcharacters = vsnprintf_s(finished_message, finished_message_len, _TRUNCATE, printf_like_message, arglist);
+#else
+   const int nbrcharacters = vsnprintf(finished_message, finished_message_len, printf_like_message, arglist);
+#endif
+  //  va_end(arglist);
+
+   if (nbrcharacters < 0) {
+      stream() << "\n\tERROR LOG MSG NOTIFICATION: Failure to successfully parse the message";
+      stream() << '"' << printf_like_message << '"' << std::endl;
+   } else if (nbrcharacters > finished_message_len) {
+      stream() << finished_message << kTruncatedWarningText;
+   } else {
+      stream() << finished_message;
+   }
+}
